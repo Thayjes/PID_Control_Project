@@ -2,7 +2,8 @@
 Self-Driving Car Engineer Nanodegree Program
 
 ---
-
+# Rubric Discussion Points
+* Bullet list Describe the effect P, I and D components had in your implementation
 ## Dependencies
 
 * cmake >= 3.5
