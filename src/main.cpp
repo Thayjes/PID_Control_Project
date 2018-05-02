@@ -44,9 +44,9 @@ int main()
     // On run with Twiddle, with throttle fixed at 0.5 and steps = 2000
     // Completes the lap, with throttle = 0.5.
     // On second run with Twiddle, steps = 4000.
-    double Kp_s = 0.131381;
-    double Ki_s = 8.8008e-05;
-    double Kd_s = 3.8262;
+    double Kp_s = 0.174381;
+    double Ki_s = 0.0002786;
+    double Kd_s = 4.46262;
     pid_s.Init(Kp_s, Ki_s, Kd_s);
     // P,I and D for throttle control
     double Kp_t = 0.3;
@@ -56,7 +56,7 @@ int main()
     //After twiddle
     Kp_t = 0.381059;
     Ki_t = 0.0;
-    Kd_t = 0.012569;
+    Kd_t = 0.022569;
     pid_t.Init(Kp_t, Ki_t, Kd_t);
   h.onMessage([&pid_s, &pid_t](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -87,7 +87,7 @@ int main()
             
             double throttle_value;
             pid_t.UpdateError(cte);
-            throttle_value = 0.75 -pid_t.Kp*pid_t.p_error - pid_t.Ki*pid_t.i_error
+            throttle_value = 0.65 -pid_t.Kp*pid_t.p_error - pid_t.Ki*pid_t.i_error
             - pid_t.Kd*pid_t.d_error;
           
           // DEBUG
