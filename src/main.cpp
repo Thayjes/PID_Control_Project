@@ -6,7 +6,7 @@
 
 // for convenience
 using json = nlohmann::json;
-
+int num_iterations = 0;
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
@@ -31,14 +31,38 @@ std::string hasData(std::string s) {
 int main()
 {
   uWS::Hub h;
-
-  PID pid;
+  
+  PID pid_s;
+  PID pid_t; // PID controller for throttle
   // TODO: Initialize the pid variable.
-
-  h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+    std::cout << "Initializing Parameters" << std::endl;
+    /* First Twiddle Attempt
+    double Kp_s = 1.19832;
+    double Ki_s = 0.0;
+    double Kd_s = 4.46997;
+     */
+    // On run with Twiddle, with throttle fixed at 0.5 and steps = 2000
+    // Completes the lap, with throttle = 0.5.
+    // On second run with Twiddle, steps = 4000.
+    double Kp_s = 0.131381;
+    double Ki_s = 8.8008e-05;
+    double Kd_s = 3.8262;
+    pid_s.Init(Kp_s, Ki_s, Kd_s);
+    // P,I and D for throttle control
+    double Kp_t = 0.3;
+    double Ki_t = 0.0;
+    double Kd_t = 0.01;
+    //
+    //After twiddle
+    Kp_t = 0.381059;
+    Ki_t = 0.0;
+    Kd_t = 0.012569;
+    pid_t.Init(Kp_t, Ki_t, Kd_t);
+  h.onMessage([&pid_s, &pid_t](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
+      // TODO: Initialize the pid variable.
     if (length && length > 2 && data[0] == '4' && data[1] == '2')
     {
       auto s = hasData(std::string(data).substr(0, length));
@@ -57,15 +81,84 @@ int main()
           * NOTE: Feel free to play around with the throttle and speed. Maybe use
           * another PID controller to control the speed!
           */
+            pid_s.UpdateError(cte);
+            steer_value = -pid_s.Kp*pid_s.p_error - pid_s.Ki*pid_s.i_error
+            - pid_s.Kd*pid_s.d_error;
+            
+            double throttle_value;
+            pid_t.UpdateError(cte);
+            throttle_value = 0.75 -pid_t.Kp*pid_t.p_error - pid_t.Ki*pid_t.i_error
+            - pid_t.Kd*pid_t.d_error;
           
           // DEBUG
-          std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
-
+          //std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
           json msgJson;
           msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = 0.3;
+          msgJson["throttle"] = throttle_value;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+          //std::cout << msg << std::endl;
+            // Twiddle Both
+            /*
+            if(pid_both.step % (pid_both.num_steps_run + pid_both.num_steps_error) == 0){
+                //std::cout << pid_s.num_steps_run + pid_s.num_steps_error << " have passed!" << std::endl;
+                std::cout << "Time to run twiddle (BOTH) to update our P, I and D parameters!" << std::endl;
+                pid_both.Twiddle(0.2);
+                //std::cout << "Setting Step Back to 1" << std::endl;
+                pid_both.step = 1;
+                //std::cout << "Incrementing num of twiddle iterations" << std::endl;
+                ++pid_both.num_iterations;
+                // Set all errors back to zero for the new run
+                pid_both.p_error = 0.0;
+                pid_both.d_error = 0.0;
+                pid_both.i_error = 0.0;
+                // Reset car back to start of track
+                std::string reset_msg = "42[\"reset\",{}]";
+                ws.send(reset_msg.data(), reset_msg.length(), uWS::OpCode::TEXT);
+                
+            }
+            // If we have run a certain number of steps
+            // Run twiddle
+            // Update the parameter and reset the car back to the start
+            // Is this the correct method?
+            // Or do we update and continue to drive the car around the track??
+            
+            if(pid_s.step % (pid_s.num_steps_run + pid_s.num_steps_error) == 0){
+                //std::cout << pid_s.num_steps_run + pid_s.num_steps_error << " have passed!" << std::endl;
+                std::cout << "Time to run twiddle (STEER) to update our P, I and D parameters!" << std::endl;
+                pid_s.Twiddle(0.2);
+                //std::cout << "Setting Step Back to 1" << std::endl;
+                pid_s.step = 1;
+                //std::cout << "Incrementing num of twiddle iterations" << std::endl;
+                ++pid_s.num_iterations;
+                pid_s.p_error = 0.0;
+                pid_s.d_error = 0.0;
+                pid_s.i_error = 0.0;
+                //std::string reset_msg = "42[\"reset\",{}]";
+                //ws.send(reset_msg.data(), reset_msg.length(), uWS::OpCode::TEXT);
+                
+            }
+            
+            // Twiddle Throttle Value;
+            
+            if(pid_t.step % (pid_t.num_steps_run + pid_t.num_steps_error) == 0){
+                std::cout << pid_t.num_steps_run + pid_t.num_steps_error << " have passed!" << std::endl;
+                std::cout << "Time to run twiddle (THROTTLE) to update our P, I and D parameters!" << std::endl;
+                pid_t.Twiddle(0.2);
+                //std::cout << "Setting Step Back to 1" << std::endl;
+                pid_t.step = 1;
+                //std::cout << "Incrementing num of twiddle iterations" << std::endl;
+                ++pid_t.num_iterations;
+                pid_t.p_error = 0.0;
+                pid_t.d_error = 0.0;
+                pid_t.i_error = 0.0;
+                std::string reset_msg = "42[\"reset\",{}]";
+                ws.send(reset_msg.data(), reset_msg.length(), uWS::OpCode::TEXT);
+                
+            }
+             //*/
+            ++pid_s.step;
+            ++pid_t.step;
+            //++pid_both.step;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
@@ -73,6 +166,9 @@ int main()
         std::string msg = "42[\"manual\",{}]";
         ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
       }
+        
+        
+
     }
   });
 
