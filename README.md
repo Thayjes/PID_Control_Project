@@ -11,6 +11,8 @@ The I (integral) component accounts for bias in the steering. If there is a cons
 
 The D (derivative) component refers to the component which is determined by the change in the CTE (cross track error) from one time step to the next. The role of this component is to approach the center of the track smoothly and eliminate overshoot and oscillations. 
 
+[Here is a link to the video](https://drive.google.com/open?id=12Wc31uZeQjTL4IBkIBC9mn_lkSLT1xow)
+
 * Describe how the final Hyperparameters were chosen
 
 Initially the parameters were manually tuned starting with P, then D and I. The reason for this is using Twiddle right at the start will not produce meaningful results. As the car may steer off the track thus making the optimization obsolete and not meaningful. Once a "manual" set of hyperparameters were selected I ran Twiddle for the steering angle control parameters. I ran for 2000 steps allowing 100 steps for the parameters effect to settle. With this in place I was able to control the car around the track successfully with a throttle speed upto 0.6. 
