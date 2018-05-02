@@ -3,7 +3,24 @@ Self-Driving Car Engineer Nanodegree Program
 
 ---
 # Rubric Discussion Points
-* Bullet list Describe the effect P, I and D components had in your implementation
+* Describe the effect P, I and D components had in your implementation
+
+The P (proportional) component of the controller has the strongest effect. As it causes the car to steer towards the center of the track proportional to how far the car is from the center of the track (i.e the cross track error (CTE)). If the car is far to the left it will steer to the right and vice versa
+
+The I (integral) component accounts for bias in the steering. If there is a constant offset, this may be due to physical design flaw or some other unknown factor, this needs to be accounted for. Or else we might constantly be off the center of the track by a small amount. The Integral component will help to eliminate this bias.
+
+The D (derivative) component refers to the component which is determined by the change in the CTE (cross track error) from one time step to the next. The role of this component is to approach the center of the track smoothly and eliminate overshoot and oscillations. 
+
+* Describe how the final Hyperparameters were chosen
+
+Initially the parameters were manually tuned starting with P, then D and I. The reason for this is using Twiddle right at the start will not produce meaningful results. As the car may steer off the track thus making the optimization obsolete and not meaningful. Once a "manual" set of hyperparameters were selected I ran Twiddle for the steering angle control parameters. I ran for 2000 steps allowing 100 steps for the parameters effect to settle. With this in place I was able to control the car around the track successfully with a throttle speed upto 0.6. 
+
+To further improve the speed, I incorporated a PID controller for the throttle as well. I followed a similar procedure, but now tuned all 6 parameters simultaneously. I adjusted the dP vector accordingly so the tuning for steering angle would take less time.
+
+* Steps to Improve
+
+I would definitely look into further tuning the throttle control parameters while keeping the steering constant. And also fine tuning the D parameter for the steering control.
+
 ## Dependencies
 
 * cmake >= 3.5
