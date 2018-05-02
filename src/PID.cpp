@@ -143,7 +143,7 @@ void PID::Twiddle(double tol){
 }
 
 double PID::TotalError() {
-    
+    return -Kp*p_error + -Ki*i_error + -Kd*d_error;
 }
 
 void PID::AddToIndex(int current_param_index, double current_dp) {

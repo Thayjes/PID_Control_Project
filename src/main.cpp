@@ -82,13 +82,11 @@ int main()
           * another PID controller to control the speed!
           */
             pid_s.UpdateError(cte);
-            steer_value = -pid_s.Kp*pid_s.p_error - pid_s.Ki*pid_s.i_error
-            - pid_s.Kd*pid_s.d_error;
+            steer_value = pid_s.TotalError();
             
             double throttle_value;
             pid_t.UpdateError(cte);
-            throttle_value = 0.65 -pid_t.Kp*pid_t.p_error - pid_t.Ki*pid_t.i_error
-            - pid_t.Kd*pid_t.d_error;
+            throttle_value = 0.5 + pid_t.TotalError();
           
           // DEBUG
           //std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
